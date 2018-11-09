@@ -1,4 +1,4 @@
-.PHONY: all clang_format clang_tidy clang_tidy_fix
+.PHONY: all clang_format clang_tidy clang_tidy_fix doxygen
 
 FIND = find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp  -exec
 
@@ -12,3 +12,6 @@ clang_tidy:
 
 clang_tidy_fix:
 	$(FIND) clang-tidy {} -fix -- $(tr '\n' ' ' < .clang_complete) \;
+
+doxygen:
+	doxygen docs/Doxyfile

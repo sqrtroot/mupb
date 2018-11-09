@@ -17,6 +17,7 @@
 *.pch
 
 # Compiled Dynamic libraries
+
 *.so
 *.dylib
 *.dll
@@ -37,3 +38,6 @@
 *.app
 
 # End of https://www.gitignore.io/api/c++
+
+# Exclude builded docs
+docs/build/*
