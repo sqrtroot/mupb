@@ -22,11 +22,14 @@
 #include <tuple>
 
 namespace mupb {
-  /*  All protobuf messages should inherit from this class, and give types
-   * defined in types.hh as template params*/
+  /// All protobuf messages should inherit from this class
+  /// \tparam List of Types in order defined in the protobuf file.
+  /// They should be types from @see Types
   template <typename... T>
   struct Message {
+    /// All types in a tuple
     typedef std::tuple<T...> data_t;
+    /// Actual data
     data_t data;
   };
 }  // namespace mupb

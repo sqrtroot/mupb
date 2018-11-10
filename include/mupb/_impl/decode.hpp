@@ -26,16 +26,29 @@ Unless required by applicable law or agreed to in writing, software
 #include <optional>
 #include <tuple>
 #include <type_traits>
+#include "./message.hpp"
 #include "./types.hpp"
 
+/// Main namespace
 namespace mupb {
-  namespace type {
+  /// Decode functions for different types
+  namespace typedecode {
+    /// Tools to help with type decoding
     namespace tools {
+      /// Check if byte has next bit set
+      /// \param data Byte to check
       bool inline has_next(uint8_t data) { return data & 0b10000000; }
 
+      /// Remove next_bit
+      /// \param data byte to remove nextbit from
+      /// \return byte without nextbit set
       uint8_t inline remove_next_bit(uint8_t data) { return data & 0b01111111; }
     }  // namespace tools
 
+    /// Decode varint types
+    /// \tparam T type to decode to
+    /// \param data pointer to data \sideeffect will increment data pointer
+    /// \param size size of data
     template <typename T>
     T decode_varint(uint8_t*& data, size_t size) {
       T rval = 0;
@@ -56,6 +69,7 @@ namespace mupb {
 
   }  // namespace type
   namespace impl {
+    ///Decode a field of message
     template <typename X, size_t N, size_t... seq>
     bool decode(X& x, uint8_t*& buffer, size_t buffer_size) {
       auto fd = Types::FieldDescriptor(*buffer++);
@@ -64,7 +78,7 @@ namespace mupb {
       switch (fd.wt) {
         case Types::WireType::varint:
           std::get<N>(x) =
-              type::decode_varint<typename std::tuple_element<N, X>::type>(
+              typedecode::decode_varint<typename std::tuple_element<N, X>::type>(
                   buffer, buffer_size);
           break;
         case Types::WireType::bit32:
@@ -84,6 +98,7 @@ namespace mupb {
 
       return true;
     };
+    /// Forward decoding to @see decode
     template <typename X, size_t... seq>
     bool decode(X& x, uint8_t*& buffer, size_t buffer_size,
                 std::index_sequence<seq...>) {
@@ -91,8 +106,14 @@ namespace mupb {
     }
   }  // namespace impl
 
-  template <typename T, typename Indices = std::make_index_sequence<
-                            std::tuple_size<typename T::data_t>::value>>
+  /// Decode an Message
+  /// \tparam T @see Message childclass
+  /// \param buffer Pointer to begin of buffer containing T packaet
+  /// \param size Size of afore mentioned buffer
+  template <typename T,  ///@cond DEV don't document internal type param
+            typename Indices = std::make_index_sequence<
+                std::tuple_size<typename T::data_t>::value>  ///@endcond
+            >
   std::optional<T> decode(uint8_t* buffer, size_t size) {
     T retval;
     if (impl::decode(retval.data, buffer, size, Indices{})) return retval;
