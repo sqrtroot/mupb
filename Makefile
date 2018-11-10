@@ -14,4 +14,5 @@ clang_tidy_fix:
 	$(FIND) clang-tidy {} -fix -- $(tr '\n' ' ' < .clang_complete) \;
 
 doxygen:
+	convert -resize 200 mupb.svg docs/build/mupb.png
 	doxygen docs/Doxyfile
