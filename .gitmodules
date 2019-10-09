@@ -1,0 +1,6 @@
+[submodule "tests/ext/Catch2"]
+	path = tests/ext/Catch2
+	url = https://github.com/catchorg/Catch2.git
+[submodule "tests/ext/cmake-codecov"]
+	path = tests/ext/cmake-codecov
+	url = https://github.com/RWTH-HPC/CMake-codecov.git
