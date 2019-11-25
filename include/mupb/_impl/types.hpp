@@ -165,13 +165,15 @@ namespace mupb::Types {
         /// Construct a fielddescriptor from a byte of data
         /// \param data First byte of a field
         FieldDescriptor(uint8_t data)
-                : number(data >> 3u), wt(WireType(data & 0b00000111u)) {};
+                : number(data >> 3u), wt(WireType(data & (uint8_t) 0b00000111u)) {
+                };
 
         /// Construct a fielddescriptor from its number and wiretype
-        FieldDescriptor(uint8_t number, WireType wt) : number(number), wt(wt) {};
+        constexpr FieldDescriptor(uint8_t number, WireType wt) :
+            number(number), wt(wt) {};
 
         constexpr bool operator==(const FieldDescriptor &rhs) const {
-            return number == rhs.number;
+            return number == rhs.number && wt == rhs.wt;
         }
 
         constexpr bool operator!=(const FieldDescriptor &rhs) const {
@@ -181,16 +183,7 @@ namespace mupb::Types {
     };
 
     template<uint8_t N, typename T>
-    struct Field{
-
-        FieldDescriptor fieldDescriptor{N, getWireType<T>()};
-
-        T val;
-        typedef T basetype;
-
-        Field() {}
-        Field(T val) : val(val) {}
-        operator T &() { return val; }
-        operator T() const { return val; }
+    struct Field : public std::optional<T>{
+      static constexpr FieldDescriptor fieldDescriptor{N, getWireType<T>()};
     };
 }  // namespace mupb

@@ -4,7 +4,7 @@ project(mupb_test)
 find_package(Catch2 REQUIRED)
 
 
-set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=*)
+#set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=*)
 
 file(GLOB_RECURSE test_sources src/*.cpp)
 add_executable(unit_tests main.cpp ${test_sources} src/types_wire_type.cpp)

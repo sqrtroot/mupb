@@ -41,3 +41,5 @@
 
 # Exclude builded docs
 docs/build/*
+
+CMakeFiles/*

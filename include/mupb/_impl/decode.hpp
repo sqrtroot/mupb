@@ -16,13 +16,14 @@ Unless required by applicable law or agreed to in writing, software
 /** @file decode.hpp
  *  @brief Implement the decoder for protobuf
  *
- *  This uses a lot of unicorn magic. The important parts are the implementation
+ *  This uses a bit of unicorn magic. The important parts are the implementation
  * in decode::type and the main function at the bottom
  *
  *  @author Robert Bezem(sqrtroot)
  */
 #pragma once
 
+#include <iostream>
 #include <csignal>
 #include <boost/endian/conversion.hpp>
 #include <cstring>
@@ -87,6 +88,72 @@ namespace mupb {
         }
     }  // namespace typedecode
 
+    template<typename T, size_t N , size_t... seq>
+    bool _decode(T &t, const uint8_t *buffer, size_t buffer_size) {
+        using namespace mupb::Types;
+        using namespace typedecode;
+
+        if(buffer_size == 0){
+            return false;
+        }
+
+
+        auto& original_field = std::get<N>(t.data);
+
+        auto new_field_descriptor = FieldDescriptor(*buffer);
+        buffer++; buffer_size--;
+
+        if (original_field.fieldDescriptor != new_field_descriptor){
+            if constexpr (sizeof...(seq) != 0){
+                return true && _decode<T, seq...>(t, buffer, buffer_size);
+            }else {
+                return true;
+            }
+        }
+
+        const auto wt = original_field.fieldDescriptor.wt;
+
+        if(wt == WireType::varint){
+            auto decoded = decode_varint<typename std::remove_reference_t<decltype(original_field)>::value_type>(buffer, buffer_size);
+            if(decoded){
+               auto [val, decoded_size] = *decoded;
+               *original_field = val;
+               buffer_size -= decoded_size;
+               buffer += decoded_size;
+            }else{
+                return false;
+            }
+        }else if(wt == WireType::bit64 || wt == WireType::bit32){
+            const auto bits = wt == WireType::bit64 ? 8 : 4;
+            auto decoded = decode_bit<typename std::remove_reference_t<decltype(original_field)>::value_type>(buffer, buffer_size, bits);
+            if(decoded){
+               auto [val, decoded_size] = *decoded;
+               *original_field = val;
+               buffer_size -= decoded_size;
+               buffer += decoded_size;
+            }else{
+                return false;
+            }
+        }else if(wt == WireType::length_delimited){
+            return false;
+        }else{
+            return false;
+        }
+
+        if constexpr (sizeof...(seq) != 0){
+            return true && _decode<T, seq...>(t, buffer, buffer_size);
+        }else {
+            return true;
+        }
+
+    }
+
+    template<typename T, size_t... seq>
+    bool __decode(T& t, const uint8_t *buffer, size_t buffer_size, 
+                    std::index_sequence<seq...>) {
+        return _decode<T, seq...>(t, buffer, buffer_size);
+    }
+
     /// Decode an Message
     /// \tparam T @see Message childclass
     /// \param buffer Pointer to begin of buffer containing T packet
@@ -98,6 +165,10 @@ namespace mupb {
             ///@endcond
     >
     std::optional<T> decode(const uint8_t *buffer, size_t size) {
+        T t;
+        if(__decode(t, buffer, size, Indices{})){
+            return t;
+        }
         return std::nullopt;
     }
 }  // namespace mupb

@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+message IntegerTypes{
+  int32  i32 = 1;
+  sint32 si32 = 2;
+  uint32 ui32 = 3;
+
+  int64 i64 = 4;
+  sint64 si64 = 5;
+  uint64 ui64 = 6;
+
+  fixed64 f64 = 7;
+  sfixed64 sf64 = 8;
+
+  fixed32 f32 = 9;
+  sfixed32 sf32 = 10;
+
+  float f = 11;
+}
+
